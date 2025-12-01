@@ -18,11 +18,6 @@ env/
 *.log
 *.tmp
 
-# Model artifacts
-*.pkl
-*.joblib
-*.h5
-
 # IDE files
 .vscode/
 .idea/
