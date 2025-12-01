@@ -1,117 +1,159 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Loan Prediction App</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Loan Prediction Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }
+        h1 { text-align: center; margin-bottom: 30px; }
+        .container { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; }
+        .form-container, .progress-container { flex: 1; min-width: 300px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input, select { width: 100%; padding: 5px; margin-top: 3px; border-radius: 4px; border: 1px solid #ccc; }
+        button { margin-top: 15px; padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; background-color: #007BFF; color: white; border-radius: 5px; }
+        button:hover { background-color: #0056b3; }
+        #progressBarWrapper { width: 100%; background-color: #ddd; height: 30px; margin-top: 10px; border-radius: 5px; overflow: hidden; }
+        #progressBar { height: 100%; width: 0%; background-color: green; transition: width 1s; }
+        .history-pie-container { display: flex; gap: 50px; margin-top: 40px; justify-content: center; flex-wrap: wrap; }
+        .history-container, .pie-container { flex: 1; min-width: 300px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #f4f4f4; }
+        #pieChart { width: 100%; height: 400px; }
+    </style>
 </head>
 <body>
+    <h1>Loan Prediction Dashboard</h1>
+
     <div class="container">
-        <h1>Loan Approval Predictor</h1>
-        <form action="/" method="POST">
-            <div class="form-grid">
+        <!-- Form -->
+        <div class="form-container">
+            <form id="loanForm">
+                <label>Age</label>
+                <input type="number" name="Age" required>
 
-                <div class="form-group">
-                    <label>Name:</label>
-                    <input type="text" name="UserName" placeholder="Enter your name">
-                </div>
-                <div class="form-group">
-                    <label>Email:</label>
-                    <input type="email" name="UserEmail" placeholder="example@email.com">
-                </div>
-                <div class="form-group">
-                    <label>Age:</label>
-                    <input type="number" name="Age" required>
-                </div>
-                <div class="form-group">
-                    <label>Credit Score:</label>
-                    <input type="number" name="CreditScore" required>
-                </div>
-                <div class="form-group">
-                    <label>Employment Status:</label>
-                    <select name="EmploymentStatus" required>
-                        <option>Unemployed</option>
-                        <option>Self-Employed</option>
-                        <option>Employed</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Education Level:</label>
-                    <select name="EducationLevel" required>
-                        <option>High School</option>
-                        <option>Associate</option>
-                        <option>Bachelor</option>
-                        <option>Master</option>
-                        <option>Doctorate</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Loan Amount:</label>
-                    <input type="number" step="0.01" name="LoanAmount" required>
-                </div>
-                <div class="form-group">
-                    <label>Loan Duration (months):</label>
-                    <input type="number" name="LoanDuration" required>
-                </div>
-                <div class="form-group">
-                    <label>Interest Rate (%):</label>
-                    <input type="number" step="0.01" name="InterestRate" required>
-                </div>
-                <div class="form-group">
-                    <label>Credit Card Utilization Rate:</label>
-                    <input type="number" step="0.01" name="CreditCardUtilizationRate" required>
-                </div>
-                <div class="form-group">
-                    <label>Bankruptcy History:</label>
-                    <select name="BankruptcyHistory" required>
-                        <option value="0">No</option>
-                        <option value="1">Yes</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Previous Loan Defaults:</label>
-                    <select name="PreviousLoanDefaults" required>
-                        <option value="0">No</option>
-                        <option value="1">Yes</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Length of Credit History (years):</label>
-                    <input type="number" name="LengthOfCreditHistory" required>
-                </div>
-                <div class="form-group">
-                    <label>Monthly Income:</label>
-                    <input type="number" step="0.01" name="MonthlyIncome" required>
-                </div>
-                <div class="form-group">
-                    <label>Net Worth:</label>
-                    <input type="number" step="0.01" name="NetWorth" required>
-                </div>
+                <label>Credit Score</label>
+                <input type="number" name="CreditScore" required>
 
-            </div>
+                <label>Employment Status</label>
+                <select name="EmploymentStatus">
+                    <option>Unemployed</option>
+                    <option>Self-Employed</option>
+                    <option>Employed</option>
+                </select>
 
-            <div class="submit-container">
-                <input type="submit" value="Predict">
-            </div>
-        </form>
+                <label>Education Level</label>
+                <select name="EducationLevel">
+                    <option>High School</option>
+                    <option>Associate</option>
+                    <option>Bachelor</option>
+                    <option>Master</option>
+                    <option>Doctorate</option>
+                </select>
 
-        <!-- Result / Progress Bar -->
-        {% if risk_score is defined %}
-        <div class="result mt-3">
-            <label><strong>Loan Risk Score:</strong></label>
-            <div class="progress" style="height: 30px;">
-                <div class="progress-bar {% if color == 'red' %}bg-danger{% else %}bg-success{% endif %}" 
-                     role="progressbar" 
-                     style="width: {{ risk_score }}%; min-width: 2%;" 
-                     aria-valuenow="{{ risk_score }}" 
-                     aria-valuemin="0" 
-                     aria-valuemax="100">
-                    {{ risk_score }}% → {% if color == 'green' %}Loan Approved ✅{% else %}Loan Rejected ❌{% endif %}
-                </div>
+                <label>Loan Amount</label>
+                <input type="number" name="LoanAmount" required>
+
+                <label>Loan Duration</label>
+                <input type="number" name="LoanDuration" required>
+
+                <label>Credit Card Utilization Rate</label>
+                <input type="number" name="CreditCardUtilizationRate" required>
+
+                <label>Bankruptcy History</label>
+                <input type="number" name="BankruptcyHistory" required>
+
+                <label>Previous Loan Defaults</label>
+                <input type="number" name="PreviousLoanDefaults" required>
+
+                <label>Length of Credit History</label>
+                <input type="number" name="LengthOfCreditHistory" required>
+
+                <label>Monthly Income</label>
+                <input type="number" name="MonthlyIncome" required>
+
+                <label>Net Worth</label>
+                <input type="number" name="NetWorth" required>
+
+                <label>Interest Rate</label>
+                <input type="number" name="InterestRate" required>
+
+                <button type="submit">Predict Loan</button>
+            </form>
+        </div>
+
+        <!-- Progress + Risk Score -->
+        <div class="progress-container">
+            <h2>Risk Score: <span id="riskScore">-</span></h2>
+            <div id="progressBarWrapper">
+                <div id="progressBar"></div>
             </div>
         </div>
-        {% endif %}
     </div>
+
+    <!-- Prediction history and pie chart -->
+    <div class="history-pie-container">
+        <div class="history-container">
+            <h2>Prediction History</h2>
+            <table id="historyTable">
+                <tr>
+                    <th>Risk Score</th>
+                    <th>Approval Status</th>
+                </tr>
+            </table>
+        </div>
+        <div class="pie-container">
+            <h2>Approval vs Rejection</h2>
+            <div id="pieChart"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('loanForm');
+        const riskScoreElem = document.getElementById('riskScore');
+        const progressBar = document.getElementById('progressBar');
+        const historyTable = document.getElementById('historyTable');
+
+        form.addEventListener('submit', async function(e){
+            e.preventDefault();
+            const formData = new FormData(form);
+            const data = {};
+            formData.forEach((value, key) => data[key] = isNaN(value) ? value : parseFloat(value));
+
+            const res = await fetch('/predict', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+
+            if(!res.ok){
+                alert("Prediction failed. Check server logs.");
+                return;
+            }
+
+            const result = await res.json();
+
+            // Animate progress bar
+            riskScoreElem.innerText = result.risk_score;
+            progressBar.style.backgroundColor = result.approval_status === "Approved" ? 'green' : 'red';
+            progressBar.style.width = result.risk_score + '%';
+
+            // Update history table
+            historyTable.innerHTML = "<tr><th>Risk Score</th><th>Approval Status</th></tr>";
+            result.history.forEach(r => {
+                const row = historyTable.insertRow();
+                row.insertCell(0).innerText = r.RiskScore;
+                row.insertCell(1).innerText = r.ApprovalStatus;
+            });
+
+            // Update pie chart
+            const pieData = [{
+                values: Object.values(result.pie_data),
+                labels: Object.keys(result.pie_data),
+                type: 'pie'
+            }];
+            Plotly.newPlot('pieChart', pieData);
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Loan Prediction Result</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h2 class="text-center mb-4">Loan Prediction Result</h2>
+
+        <!-- RESULT SECTION -->
+        <div class="result" id="resultSection" style="display: none;">
+            <label><strong>Loan Risk Score:</strong></label>
+
+            <div class="progress" style="height: 30px;">
+                <div id="riskProgressBar"
+                     class="progress-bar"
+                     role="progressbar"
+                     style="width: 0%; min-width: 2%;"
+                     aria-valuenow="0"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                    <span id="riskProgressText">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prediction History -->
+        <div class="card mt-4 p-3" id="historySection" style="display: none;">
+            <h5>Prediction History</h5>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Risk Score</th>
+                        <th>Loan Approval</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <!-- JavaScript will add rows -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pie Chart -->
+        <div class="card mt-4 p-3 mb-4" id="chartSection" style="display: none;">
+            <h5>Loan Approval Distribution</h5>
+            <canvas id="approvalChart" width="400" height="300"></canvas>
+        </div>
+
+    </div>
+
+
+    <!-- JS LOGIC FOR UPDATING PAGE -->
+    <script>
+        function loadResultPage() {
+
+            // Fetch prediction details from backend (passed via redirect)
+            fetch("/get_result_data")
+                .then(response => response.json())
+                .then(data => {
+                    updateResults(
+                        data.risk_score,
+                        data.approval,
+                        data.history,
+                        data.chart
+                    );
+                });
+        }
+
+
+        /* ---------------------------
+            FUNCTION TO UPDATE UI
+        --------------------------- */
+        function updateResults(riskScore, approvalStatus, historyData, chartData) {
+
+            /* -------------------------
+                 RISK PROGRESS BAR
+            -------------------------- */
+
+            document.getElementById("resultSection").style.display = "block";
+
+            const bar = document.getElementById("riskProgressBar");
+            const text = document.getElementById("riskProgressText");
+
+            bar.style.width = riskScore + "%";
+            bar.setAttribute("aria-valuenow", riskScore);
+
+            if (approvalStatus === "Approved") {
+                bar.classList.add("bg-success");
+                bar.classList.remove("bg-danger");
+            } else {
+                bar.classList.add("bg-danger");
+                bar.classList.remove("bg-success");
+            }
+
+            text.textContent = riskScore + "% → " +
+                (approvalStatus === "Approved" ? "Loan Approved ✅" : "Loan Rejected ❌");
+
+
+
+            /* -------------------------
+                 PREDICTION HISTORY TABLE
+            -------------------------- */
+
+            if (historyData && historyData.length > 0) {
+
+                document.getElementById("historySection").style.display = "block";
+
+                const tableBody = document.getElementById("historyTableBody");
+                tableBody.innerHTML = "";
+
+                historyData.forEach(item => {
+                    const row = document.createElement("tr");
+
+                    row.innerHTML =
+                        "<td>" + item.customer + "</td>" +
+                        "<td>" + item.risk + "%</td>" +
+                        "<td>" + (item.status === "Approved"
+                            ? "<span class='badge bg-success'>Approved</span>"
+                            : "<span class='badge bg-danger'>Denied</span>") +
+                        "</td>";
+
+                    tableBody.appendChild(row);
+                });
+            }
+
+
+            /* -------------------------
+                 PIE CHART
+            -------------------------- */
+
+            if (chartData) {
+                document.getElementById("chartSection").style.display = "block";
+
+                const ctx = document.getElementById("approvalChart").getContext("2d");
+
+                new Chart(ctx, {
+                    type: "pie",
+                    data: {
+                        labels: ["Approved", "Denied"],
+                        datasets: [{
+                            data: [chartData.approved, chartData.denied],
+                            backgroundColor: ["#28a745", "#dc3545"]
+                        }]
+                    }
+                });
+            }
+        }
+
+
+        // Initialize when page loads
+        window.onload = loadResultPage;
+    </script>
+
+</body>
+</html>
