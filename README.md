@@ -2,7 +2,7 @@
 
 A Flask-based web app that predicts **Risk Score (regression)** and **Loan Approval (classification)** based on financial and personal data.
 
-![Loan Approval Screenshot]"C:\Users\SIRI\Pictures\Screenshots\Screenshot (115).png"
+![Loan Approval Screenshot](https://github.com/siri142523/Loan---Predictor/raw/main/static/Screenshot.png)
 ---
 
 ## 📌 Overview
