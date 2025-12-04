@@ -1,9 +1,46 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 import numpy as np
 import pandas as pd
 import pickle
+import json
 
 app = Flask(__name__)
+app.secret_key = "your_secret_key_here"   # CHANGE THIS TO ANY RANDOM STRING
+
+# --------------------------
+# AUTHENTICATION SETUP
+# --------------------------
+
+# Load users
+with open('users.json', 'r') as f:
+    USERS = json.load(f)
+
+def is_logged_in():
+    return "username" in session
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == "POST":
+        username = request.form['username']
+        password = request.form['password']
+
+        # Validate credentials
+        if username in USERS and USERS[username] == password:
+            session['username'] = username
+            return redirect(url_for('index'))
+        else:
+            return render_template('login.html', error="Invalid username or password")
+
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+# --------------------------
+# EXISTING ORIGINAL CODE
+# --------------------------
 
 # Load models and scaler
 with open('models/reg_model.pkl', 'rb') as f:
@@ -29,15 +66,19 @@ num_cols_to_standardize = [
 # In-memory prediction history
 prediction_history = []
 
-# Serve the dashboard
+# Protect dashboard
 @app.route('/')
 def index():
+    if not is_logged_in():
+        return redirect(url_for('login'))
     return render_template('index.html')
-
 
 # Prediction endpoint
 @app.route('/predict', methods=['POST'])
 def predict():
+    if not is_logged_in():
+        return jsonify({"error": "Unauthorized"}), 401
+
     data = request.json
 
     # Convert input to DataFrame
@@ -76,6 +117,30 @@ def predict():
         'pie_data': pie_data
     })
 
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        # Load existing users
+        with open('users.json', 'r') as f:
+            users = json.load(f)
+
+        # Check if user already exists
+        if username in users:
+            return "User already exists! Try a different username."
+
+        # Add new user
+        users[username] = password
+
+        # Save back to file
+        with open('users.json', 'w') as f:
+            json.dump(users, f, indent=4)
+
+        return "Signup successful! Now go to Login page."
+
+    return render_template('signup.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
