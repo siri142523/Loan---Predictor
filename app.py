@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import pickle
 import json
+import os
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key_here"   # CHANGE THIS TO ANY RANDOM STRING
@@ -11,9 +12,12 @@ app.secret_key = "your_secret_key_here"   # CHANGE THIS TO ANY RANDOM STRING
 # AUTHENTICATION SETUP
 # --------------------------
 
-# Load users
-with open('users.json', 'r') as f:
-    USERS = json.load(f)
+USERS_FILE = 'users.json'
+
+# Ensure the users.json file exists
+if not os.path.exists(USERS_FILE):
+    with open(USERS_FILE, 'w') as f:
+        json.dump({"admin": "admin123", "testuser": "testuser123"}, f, indent=4)
 
 def is_logged_in():
     return "username" in session
@@ -23,6 +27,10 @@ def login():
     if request.method == "POST":
         username = request.form['username']
         password = request.form['password']
+
+        # Load fresh users every time
+        with open(USERS_FILE, 'r') as f:
+            USERS = json.load(f)
 
         # Validate credentials
         if username in USERS and USERS[username] == password:
@@ -123,8 +131,8 @@ def signup():
         username = request.form['username']
         password = request.form['password']
 
-        # Load existing users
-        with open('users.json', 'r') as f:
+        # Load existing users every time
+        with open(USERS_FILE, 'r') as f:
             users = json.load(f)
 
         # Check if user already exists
@@ -135,7 +143,7 @@ def signup():
         users[username] = password
 
         # Save back to file
-        with open('users.json', 'w') as f:
+        with open(USERS_FILE, 'w') as f:
             json.dump(users, f, indent=4)
 
         return "Signup successful! Now go to Login page."

@@ -1,4 +1,6 @@
 {
     "users": [],
-    "admin": "admin123"
+    "admin": "admin123",
+    "testuser": "testuser123",
+    "testuser 1": "testuser123"
 }
