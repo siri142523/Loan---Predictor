@@ -1,10 +1,7 @@
-# 🏦 Risk Assessment & Loan Approval Prediction
+# 🏦 Loan Approval Predictor (ML + Flask + Authentication)
 
-A Flask-based web application that predicts a Risk Score (regression) and Loan Approval (classification) based on personal and financial data. The app provides an interactive dashboard with progress bars, predicted history, and visualizations (like pie charts).
-
-![Loan Approval Screenshot](https://github.com/siri142523/Loan---Predictor/raw/main/static/login.png)
-![Loan Approval Screenshot](https://github.com/siri142523/Loan---Predictor/raw/main/static/signup.png)
-![Loan Approval Screenshot](https://github.com/siri142523/Loan---Predictor/raw/main/static/dashboard.png)
+A machine-learning-based Loan Approval System with **user authentication**,  
+**Risk Score prediction**, and an **interactive dashboard** built using Flask.
 
 ---
 
@@ -12,11 +9,39 @@ A Flask-based web application that predicts a Risk Score (regression) and Loan A
 
 This project leverages machine learning models trained on a synthetic dataset to:
 
-Predict a Risk Score for loan applicants using LGBM Regressor.
-Predict whether a Loan will be approved using Random Forest Classifier.
-Display prediction history and interactive charts for better insights.
+- Predict a **Risk Score** for loan applicants using **LGBM Regressor**
+- Predict whether a **Loan will be Approved/Rejected** using **Random Forest Classifier**
+- Display **prediction history & interactive charts** for insights
+- Provide a **secure login/signup system** for users
 
-The web interface is built using Flask, HTML, and CSS for a professional, user-friendly experience.
+The web interface is built using **Flask, HTML, CSS**, and includes **user authentication** for restricted access.
+
+---
+
+## 🔐 User Authentication (NEW)
+
+A complete authentication system is added:
+
+- **Login page**
+- **Signup page**
+- **Session-based login**
+- **Protected dashboard (index.html)**
+- Users stored in `users.json`
+
+Only logged-in users can access:
+- Prediction Form  
+- Dashboard  
+- Results  
+
+### 🔑 Authentication Screenshots
+
+#### 🔵 Login Page  
+![Loan Approval Screenshot](https://github.com/siri142523/Loan---Predictor/raw/main/static/login.png)
+#### 🟣 Signup Page  
+![Loan Approval Screenshot](https://github.com/siri142523/Loan---Predictor/raw/main/static/signup.png)
+#### 🟢 Dashboard  
+![Loan Approval Screenshot](https://github.com/siri142523/Loan---Predictor/raw/main/static/dashboard.png)
+
 ---
 
 ## 📁 Project Structure
@@ -29,15 +54,17 @@ Loan-Approval-Predictor/
 │   ├── reg_model.pkl
 │   └── scaler.pkl
 │
-├── static/                   # Static assets (CSS, images, JS)
+├──static/                   # Static assets (CSS, images)
 │   ├── style.css
-│   └── loan_dashboard.png
-│
+│   ├── login.png
+│   ├── signup.png
+│   ├── dashboard.png
+|
 ├── templates/                # Flask HTML templates
 │   ├── index.html
 │   ├── result.html
-│   ├── login.html            # (if added)
-│   ├── signup.html           # (if added)
+│   ├── login.html            
+│   ├── signup.html           
 │
 ├── app.py                    # Flask backend
 ├── .gitignore
@@ -50,42 +77,60 @@ Loan-Approval-Predictor/
 
 ## 🔧 Data & Modeling
 
-All preprocessing, feature engineering, and model testing are documented in EDA.ipynb.
+All preprocessing, feature engineering, and model experimentation are documented in:
 
-Final selected models are saved and used in model.ipynb and the deployed Flask app.
+- **EDA.ipynb** → Cleaning, visualization, correlation, feature engineering  
+- **model.ipynb** → Model training & evaluation
 
-Features standardized and some numeric features transformed using log1p.
+### ✔ Final ML Pipeline
 
-Models predict risk score first, then loan approval based on the score.
+- Features standardized and numeric columns log-transformed (`log1p`)
+- **LGBM Regressor** → Predicts Risk Score
+- **Random Forest Classifier** → Predicts Loan Approval based on Risk Score
+- Saved models:
+  - `reg_model.pkl`
+  - `clf_model.pkl`
+  - `scaler.pkl`
 
 ---
 
 ## 🚀 Deployment
 
-The Flask app provides:
+The Flask application provides:
 
-index.html: Input form for applicant data with a progress bar.
-result.html: Displays the predicted risk score, approval status, and visualizations (history, pie charts).
-app.py: Handles predictions and routing.
-static/style.css: Custom styling for the web interface.
+### 📂 **Templates**
+- **index.html** → Input form, progress bar, visual dashboard  
+- **result.html** → Shows score, approval result, pie charts  
+- **login.html** → Login UI  
+- **signup.html** → Signup UI  
+
+### 📁 **Backend**
+- **app.py**
+  - Routes for login, signup, prediction
+  - Session authentication
+  - Returns history + chart data as JSON
+
+### 🎨 **Static**
+- **style.css**  
+- **login.png, signup.png, dashboard.png** (screenshots)
 
 ---
 
 ## 🧠 Results Summary
 
--Risk Score Prediction: LGBM Regressor with scaled features.
--Loan Approval Prediction: Random Forest Classifier.
--Professional Dashboard: Progress bars, history table, pie charts.
--Interactive Results Page: result.html displays predictions and visual summaries neatly.
+- **Risk Score Prediction:** LGBM Regressor with standardized features  
+- **Loan Approval Prediction:** Random Forest Classifier  
+- **Dashboard:** Progress bar, history table, pie charts  
+- **Authenticated Access:** Only logged-in users can use the tool
 
 ---
 
 ## 💻 Future Improvements
 
-Add user authentication for multiple applicants.
-Save prediction history in a database.
-Add more visual analytics for loan trends.
-Deploy on Heroku or AWS for live access.
+- Save prediction history in a database.
+- Add more visual analytics for loan trends.
+- Deploy on Heroku or AWS for live access.
+- Add password hashing for higher security  
 
 ---
 
