@@ -2,7 +2,10 @@
 
 A Flask-based web application that predicts a Risk Score (regression) and Loan Approval (classification) based on personal and financial data. The app provides an interactive dashboard with progress bars, predicted history, and visualizations (like pie charts).
 
-![Loan Approval Screenshot](https://github.com/siri142523/Loan---Predictor/raw/main/static/loan_dashboard.png)
+![Loan Approval Screenshot](https://github.com/siri142523/Loan---Predictor/raw/main/static/login.png)
+![Loan Approval Screenshot](https://github.com/siri142523/Loan---Predictor/raw/main/static/signup.png)
+![Loan Approval Screenshot](https://github.com/siri142523/Loan---Predictor/raw/main/static/dashboard.png)
+
 ---
 
 ## 📌 Overview
