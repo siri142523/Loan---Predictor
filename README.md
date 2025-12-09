@@ -26,13 +26,15 @@ Loan-Approval-Predictor/
 │   ├── reg_model.pkl
 │   └── scaler.pkl
 │
-├── static/                   # Static assets
+├── static/                   # Static assets (CSS, images, JS)
 │   ├── style.css
-│   ├── loan_dashboard.png    # Dashboard screenshot
-│   └── result.html           # Results page template
+│   └── loan_dashboard.png
 │
-├── templates/                # Flask templates
-│   └── index.html
+├── templates/                # Flask HTML templates
+│   ├── index.html
+│   ├── result.html
+│   ├── login.html            # (if added)
+│   ├── signup.html           # (if added)
 │
 ├── app.py                    # Flask backend
 ├── .gitignore
