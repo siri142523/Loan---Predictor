@@ -1,9 +1,40 @@
+import pytesseract
+from PIL import Image
+import re
+import os
+from pdf2image import convert_from_bytes
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import sqlite3
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 app = Flask(__name__)
 app.secret_key = "loan_secret_key"
 DB_FILE = "loan.db"
+
+def is_valid_pan(file):
+    import pytesseract
+    import re
+    from PIL import Image
+    import io
+
+    try:
+        image = Image.open(io.BytesIO(file.read()))
+        text = pytesseract.image_to_string(image)
+        file.seek(0)
+
+        text = text.upper()
+
+        keywords = ["INCOME TAX", "PERMANENT ACCOUNT NUMBER", "GOVT OF INDIA", "PAN"]
+        if not any(k in text for k in keywords):
+            return False
+
+        pan_pattern = r"[A-Z]{5}[0-9]{4}[A-Z]"
+        if not re.search(pan_pattern, text):
+            return False
+
+        return True
+    except:
+        return False
 
 # ---------------- Database Setup ----------------
 conn = sqlite3.connect(DB_FILE)
@@ -140,7 +171,74 @@ def verify():
     if "loan_data" not in session:
         return redirect(url_for("index"))
 
+    error = None
+
     if request.method == "POST":
+        aadhaar = request.files.get("aadhaar")
+        pan = request.files.get("pan")
+
+        def validate_file(file, keywords):
+            if not file or file.filename == "":
+                return False, "File not selected"
+
+            allowed = [".pdf", ".png", ".jpg", ".jpeg"]
+            if not any(file.filename.lower().endswith(ext) for ext in allowed):
+                return False, "Invalid file format"
+
+            file.seek(0, 2)
+            size = file.tell()
+            file.seek(0)
+
+            if size < 5 * 1024:
+                return False, "File appears to be empty"
+
+            if size > 2 * 1024 * 1024:
+                return False, "File size exceeds 2 MB"
+
+            content = file.read().lower()
+            file.seek(0)
+
+            if not any(k.encode() in content for k in keywords):
+                return False, "Document content not valid"
+
+            return True, None
+
+        # ---------------- Aadhaar Validation (UNCHANGED) ----------------
+        ok, msg = validate_file(
+            aadhaar,
+            ["aadhaar", "uidai", "government of india"]
+        )
+        if not ok:
+            error = "Invalid Aadhaar document"
+            return render_template("verify.html", error=error)
+
+        # ---------------- PAN OCR VALIDATION (UPDATED) ----------------
+        if not pan or pan.filename == "":
+            error = "PAN file not selected"
+            return render_template("verify.html", error=error)
+
+        if not pan.filename.lower().endswith((".pdf", ".png", ".jpg", ".jpeg")):
+            error = "Invalid PAN file format"
+            return render_template("verify.html", error=error)
+
+        pan.seek(0, 2)
+        size = pan.tell()
+        pan.seek(0)
+
+        if size < 5 * 1024:
+            error = "PAN file appears to be empty"
+            return render_template("verify.html", error=error)
+
+        if size > 2 * 1024 * 1024:
+            error = "PAN file size exceeds 2 MB"
+            return render_template("verify.html", error=error)
+
+        # 🔥 REAL PAN OCR CHECK
+        if not is_valid_pan(pan):
+            error = "Uploaded document is not a valid PAN card"
+            return render_template("verify.html", error=error)
+
+        # ---------------- Success ----------------
         session["verification"] = {
             "aadhaar": "Verified",
             "pan": "Verified",
@@ -148,7 +246,7 @@ def verify():
         }
         return redirect(url_for("result"))
 
-    return render_template("verify.html", user=session["user"])
+    return render_template("verify.html", error=error)
 
 # ---------------- Result Page ----------------
 @app.route("/result")

@@ -86,6 +86,27 @@ button{
 
     <h2>Document Verification</h2>
 
+    <p style="
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    width: 70%;
+    margin: 10px auto;
+">
+<b>Note:</b>
+Upload a clear Aadhaar and PAN card in PDF / JPG / PNG format.
+Maximum file size: 2 MB.
+Documents must be readable and issued by Government of India.
+</p>
+
+    {% if error %}
+<p style="color:#ff6b6b; font-weight:bold; text-align:center;">
+    {{ error }}
+</p>
+{% endif %}
+
     <form method="POST" enctype="multipart/form-data">
 
         <label>Upload Aadhaar Card</label>
