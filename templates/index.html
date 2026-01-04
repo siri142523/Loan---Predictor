@@ -1,218 +1,131 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Loan Prediction Dashboard</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <style>
-        /* Dashboard background */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: url("{{ url_for('static', filename='dashboard_bg.jpg') }}") no-repeat center center/cover;
-            min-height: 100vh;
-            color: #000;
-        }
-
-        /* Dark overlay */
-        .overlay {
-            background: rgba(0, 0, 0, 0.65); /* dark semi-transparent overlay */
-            border-radius: 8px;
-            padding: 20px;
-            color: #fff; /* make text readable */
-        }
-
-        /* Logout button */
-        .logout-btn {
-            position: absolute;
-            top: 20px;
-            right: 30px;
-            padding: 8px 15px;
-            background-color: #dc3545;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .logout-btn:hover {
-            background-color: #a71d2a;
-        }
-
-        h1 { text-align: center; margin-bottom: 30px; }
-
-        .container { 
-            display: flex; 
-            gap: 40px; 
-            justify-content: center; 
-            flex-wrap: wrap; 
-        }
-
-        .form-container, .progress-container { 
-            flex: 1; 
-            min-width: 300px; 
-            padding: 20px; 
-            background: rgba(255, 255, 255, 0.1); /* slightly transparent boxes */
-            border-radius: 8px;
-        }
-
-        label { display: block; margin-top: 10px; font-weight: bold; }
-        input, select { width: 100%; padding: 5px; margin-top: 3px; border-radius: 4px; border: 1px solid #ccc; }
-        button { margin-top: 15px; padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; background-color: #007BFF; color: white; border-radius: 5px; }
-        button:hover { background-color: #0056b3; }
-
-        /* Progress bar */
-        #progressBarWrapper { width: 100%; background-color: #ddd; height: 30px; margin-top: 10px; border-radius: 5px; overflow: hidden; }
-        #progressBar { height: 100%; width: 0%; transition: width 1s; background: linear-gradient(90deg, #28a745, #85e085); }
-
-        .history-pie-container { display: flex; gap: 50px; margin-top: 40px; justify-content: center; flex-wrap: wrap; }
-        .history-container, .pie-container { flex: 1; min-width: 300px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 8px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-        th { background-color: rgba(255,255,255,0.2); }
-        #pieChart { width: 100%; height: 400px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loan Dashboard</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-    <div class="overlay">
-        <!-- Logout button -->
-        <button class="logout-btn" onclick="window.location.href='/logout'">Logout</button>
 
-        <h1>Loan Prediction Dashboard</h1>
+<body style="background: url('/static/dashboard_bg.jpg') no-repeat center center fixed; background-size: cover;">
 
-        <div class="container">
-            <!-- Form -->
-            <div class="form-container">
-                <form id="loanForm">
-                    <label>Age</label>
-                    <input type="number" name="Age" required>
+<!-- PROFILE SECTION -->
+<div style="position:absolute; top:20px; left:20px;">
 
-                    <label>Credit Score</label>
-                    <input type="number" name="CreditScore" required>
-
-                    <label>Employment Status</label>
-                    <select name="EmploymentStatus">
-                        <option>Unemployed</option>
-                        <option>Self-Employed</option>
-                        <option>Employed</option>
-                    </select>
-
-                    <label>Education Level</label>
-                    <select name="EducationLevel">
-                        <option>High School</option>
-                        <option>Associate</option>
-                        <option>Bachelor</option>
-                        <option>Master</option>
-                        <option>Doctorate</option>
-                    </select>
-
-                    <label>Loan Amount</label>
-                    <input type="number" name="LoanAmount" required>
-
-                    <label>Loan Duration</label>
-                    <input type="number" name="LoanDuration" required>
-
-                    <label>Credit Card Utilization Rate</label>
-                    <input type="number" name="CreditCardUtilizationRate" required>
-
-                    <label>Bankruptcy History</label>
-                    <input type="number" name="BankruptcyHistory" required>
-
-                    <label>Previous Loan Defaults</label>
-                    <input type="number" name="PreviousLoanDefaults" required>
-
-                    <label>Length of Credit History</label>
-                    <input type="number" name="LengthOfCreditHistory" required>
-
-                    <label>Monthly Income</label>
-                    <input type="number" name="MonthlyIncome" required>
-
-                    <label>Net Worth</label>
-                    <input type="number" name="NetWorth" required>
-
-                    <label>Interest Rate</label>
-                    <input type="number" name="InterestRate" required>
-
-                    <button type="submit">Predict Loan</button>
-                </form>
-            </div>
-
-            <!-- Progress + Risk Score -->
-            <div class="progress-container">
-                <h2>Risk Score: <span id="riskScore">-</span></h2>
-                <div id="progressBarWrapper">
-                    <div id="progressBar"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Prediction history and pie chart -->
-        <div class="history-pie-container">
-            <div class="history-container">
-                <h2>Prediction History</h2>
-                <table id="historyTable">
-                    <tr>
-                        <th>Risk Score</th>
-                        <th>Approval Status</th>
-                    </tr>
-                </table>
-            </div>
-            <div class="pie-container">
-                <h2>Approval vs Rejection</h2>
-                <div id="pieChart"></div>
-            </div>
+    <div onclick="toggleProfile()" 
+         style="display:flex;align-items:center;cursor:pointer;">
+        <img src="/static/profile.png"
+             style="width:45px;height:45px;border-radius:50%;margin-right:10px;">
+        <div style="color:white;">
+            <div id="pname" style="font-weight:bold;">User</div>
+            <div id="pemail" style="font-size:13px;">email</div>
         </div>
     </div>
 
-    <script>
-        const form = document.getElementById('loanForm');
-        const riskScoreElem = document.getElementById('riskScore');
-        const progressBar = document.getElementById('progressBar');
-        const historyTable = document.getElementById('historyTable');
+    <!-- DROPDOWN -->
+    <div id="profileMenu"
+         style="
+            display:none;
+            margin-top:10px;
+            background:rgba(0,0,0,0.8);
+            padding:12px;
+            border-radius:10px;
+            color:white;
+            width:200px;
+         ">
+        <p id="dname"></p>
+        <p id="demail" style="font-size:13px;"></p>
+        <hr style="border:0.5px solid gray;">
+        <a href="{{ url_for('logout') }}"
+           style="color:#ff7675;text-decoration:none;"
+           onclick="localStorage.clear()">
+           Logout
+        </a>
+    </div>
 
-        form.addEventListener('submit', async function(e){
-            e.preventDefault();
-            const formData = new FormData(form);
-            const data = {};
-            formData.forEach((value, key) => data[key] = isNaN(value) ? value : parseFloat(value));
+</div>
 
-            const res = await fetch('/predict', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
+<div class="card">
+<div style="
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:12px;
+    margin-top:20px;
+    margin-bottom:20px;
+">
+    <img src="/static/loan-logo.png"
+         style="width:40px;height:40px;">
+    <h2 style="margin:0;">Loan Prediction Dashboard</h2>
+</div>
 
-            if(!res.ok){
-                alert("Prediction failed. Check server logs.");
-                return;
-            }
+<p style="text-align:center;">Welcome</p>
 
-            const result = await res.json();
+<form method="POST">
 
-            // Animate progress bar
-            riskScoreElem.innerText = result.risk_score;
-            progressBar.style.background = result.approval_status === "Approved" 
-                ? 'linear-gradient(90deg, #28a745, #85e085)' 
-                : 'linear-gradient(90deg, #dc3545, #ff7b7b)';
-            progressBar.style.width = result.risk_score + '%';
+    <div style="
+        background: rgba(0,0,0,0.6);
+        padding: 30px;
+        border-radius: 15px;
+        width: 70%;
+        margin: 40px auto;
+        color: white;
+    ">
 
-            // Update history table
-            historyTable.innerHTML = "<tr><th>Risk Score</th><th>Approval Status</th></tr>";
-            result.history.forEach(r => {
-                const row = historyTable.insertRow();
-                row.insertCell(0).innerText = r.RiskScore;
-                row.insertCell(1).innerText = r.ApprovalStatus;
-            });
+    <div class="form-row">
+        <input type="text" name="name" placeholder="Name" required>
+        <input type="number" name="age" placeholder="Age" required>
+        <input type="email" name="email" placeholder="Email" required>
+    </div><br>
 
-            // Update pie chart
-            const pieData = [{
-                values: Object.values(result.pie_data),
-                labels: Object.keys(result.pie_data),
-                type: 'pie',
-                marker: {colors: ['#28a745','#dc3545']} // green for approved, red for rejected
-            }];
-            Plotly.newPlot('pieChart', pieData);
-        });
-    </script>
+    <label>Loan Type</label>
+    <select name="loan_type" required>
+        <option>Home Loan</option>
+        <option>Education Loan</option>
+        <option>Personal Loan</option>
+        <option>Vehicle Loan</option>
+    </select><br><br>
+
+    <label>Annual Income</label>
+    <input type="number" name="income" placeholder="Enter Annual Income" required><br><br>
+
+    <label>Loan Amount</label>
+    <input type="number" name="loan_amount" placeholder="Enter Loan Amount" required><br><br>
+
+    <label>Employment Type</label>
+    <select name="employment" required>
+    <option value="">Select Employment Type</option>
+    <option>Salaried</option>
+    <option>Self Employed</option>
+    <option>Unemployed</option>
+</select><br><br>
+
+    <button type="submit">Next</button>
+
+    </div>
+</form>
+</div>
+
+<!-- PROFILE SCRIPT -->
+<script>
+function toggleProfile() {
+    const menu = document.getElementById("profileMenu");
+    menu.style.display = (menu.style.display === "block") ? "none" : "block";
+}
+
+// Load profile dynamically
+document.getElementById("pname").innerText =
+    localStorage.getItem("userName") || "User";
+
+document.getElementById("pemail").innerText =
+    localStorage.getItem("userEmail") || "user@email.com";
+
+document.getElementById("dname").innerText =
+    localStorage.getItem("userName") || "User";
+
+document.getElementById("demail").innerText =
+    localStorage.getItem("userEmail") || "user@email.com";
+</script>
+
 </body>
 </html>

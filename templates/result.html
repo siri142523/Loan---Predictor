@@ -1,170 +1,197 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Loan Prediction Result</title>
+<meta charset="UTF-8">
+<title>Loan Result</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Chart JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body{
+    margin:0;
+    font-family: Arial, sans-serif;
+    background: url('/static/dashboard-bg.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: white;
+}
 
-    <style>
-        body {
-            padding: 20px;
-        }
-    </style>
+/* MAIN CARD */
+.result-card{
+    width: 90%;
+    margin: 40px auto;
+    background: rgba(0,0,0,0.65);
+    padding: 30px;
+    border-radius: 15px;
+}
+
+/* HEADER */
+.result-header{
+    text-align: center;
+    font-size: 30px;
+    font-weight: bold;
+    margin-bottom: 30px;
+}
+
+/* ROW */
+.result-row{
+    display: flex;
+    gap: 30px;
+}
+
+/* LEFT */
+.left-box{
+    width: 50%;
+    background: rgba(255,255,255,0.08);
+    padding: 25px;
+    border-radius: 12px;
+}
+
+.left-box h3{
+    border-bottom: 1px solid #777;
+    padding-bottom: 6px;
+}
+
+.left-box p{
+    margin: 8px 0;
+}
+
+/* RIGHT */
+.right-box{
+    width: 50%;
+    background: rgba(255,255,255,0.08);
+    padding: 25px;
+    border-radius: 12px;
+}
+
+/* RISK BAR */
+.risk-section{
+    margin-top: 35px;
+}
+
+.risk-bar-bg{
+    width: 100%;
+    height: 25px;
+    background: #333;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.risk-bar{
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, green, yellow, red);
+    transition: width 1s;
+}
+
+.status-text{
+    margin-top: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+}
+</style>
 </head>
 
 <body>
 
-    <div class="container">
+<div class="result-card">
 
-        <h2 class="text-center mb-4">Loan Prediction Result</h2>
+    <div class="result-header">
+        Loan Prediction Dashboard
+    </div>
 
-        <!-- RESULT SECTION -->
-        <div class="result" id="resultSection" style="display: none;">
-            <label><strong>Loan Risk Score:</strong></label>
+    <div class="result-row">
 
-            <div class="progress" style="height: 30px;">
-                <div id="riskProgressBar"
-                     class="progress-bar"
-                     role="progressbar"
-                     style="width: 0%; min-width: 2%;"
-                     aria-valuenow="0"
-                     aria-valuemin="0"
-                     aria-valuemax="100">
-                    <span id="riskProgressText">0%</span>
-                </div>
-            </div>
+        <!-- LEFT DETAILS -->
+        <div class="left-box">
+            <h3>Verification</h3>
+            <p id="aadhaar"></p>
+            <p id="pan"></p>
+            <p id="history"></p>
+
+            <h3>User Details</h3>
+            <p id="name"></p>
+            <p id="age"></p>
+            <p id="email"></p>
+
+            <h3>Loan Details</h3>
+            <p id="loan_type"></p>
+            <p id="income"></p>
+            <p id="loan_amount"></p>
+            <p id="employment"></p>
         </div>
 
-        <!-- Prediction History -->
-        <div class="card mt-4 p-3" id="historySection" style="display: none;">
-            <h5>Prediction History</h5>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Customer</th>
-                        <th>Risk Score</th>
-                        <th>Loan Approval</th>
-                    </tr>
-                </thead>
-                <tbody id="historyTableBody">
-                    <!-- JavaScript will add rows -->
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pie Chart -->
-        <div class="card mt-4 p-3 mb-4" id="chartSection" style="display: none;">
-            <h5>Loan Approval Distribution</h5>
-            <canvas id="approvalChart" width="400" height="300"></canvas>
+        <!-- RIGHT GRAPH -->
+        <div class="right-box">
+            <h3>Risk Analysis</h3>
+            <canvas id="riskChart" height="260"></canvas>
         </div>
 
     </div>
 
+    <!-- RISK BAR -->
+    <div class="risk-section">
+        <div id="risk_label"></div>
+        <div class="risk-bar-bg">
+            <div class="risk-bar" id="risk_bar"></div>
+        </div>
+        <div class="status-text" id="status"></div>
+    </div>
 
-    <!-- JS LOGIC FOR UPDATING PAGE -->
-    <script>
-        function loadResultPage() {
+</div>
 
-            // Fetch prediction details from backend (passed via redirect)
-            fetch("/get_result_data")
-                .then(response => response.json())
-                .then(data => {
-                    updateResults(
-                        data.risk_score,
-                        data.approval,
-                        data.history,
-                        data.chart
-                    );
-                });
-        }
+<script>
+fetch("/result_data")
+.then(res => res.json())
+.then(data => {
 
+    // Verification
+    document.getElementById("aadhaar").innerText = "Aadhaar: " + data.verification.aadhaar;
+    document.getElementById("pan").innerText = "PAN: " + data.verification.pan;
+    document.getElementById("history").innerText = "Loan History: " + data.verification.loan_history;
 
-        /* ---------------------------
-            FUNCTION TO UPDATE UI
-        --------------------------- */
-        function updateResults(riskScore, approvalStatus, historyData, chartData) {
+    // User
+    document.getElementById("name").innerText = "Name: " + data.loan_data.name;
+    document.getElementById("age").innerText = "Age: " + data.loan_data.age;
+    document.getElementById("email").innerText = "Email: " + data.loan_data.email;
 
-            /* -------------------------
-                 RISK PROGRESS BAR
-            -------------------------- */
+    // Loan
+    document.getElementById("loan_type").innerText = "Loan Type: " + data.loan_data.loan_type;
+    document.getElementById("income").innerText = "Income: ₹" + data.loan_data.income;
+    document.getElementById("loan_amount").innerText = "Loan Amount: ₹" + data.loan_data.loan_amount;
+    document.getElementById("employment").innerText = "Employment: " + data.loan_data.employment;
 
-            document.getElementById("resultSection").style.display = "block";
+    // Risk
+    document.getElementById("risk_label").innerText = "Risk Score: " + data.risk_score + "%";
+    document.getElementById("status").innerText = "Status: " + data.status;
+    document.getElementById("risk_bar").style.width = data.risk_score + "%";
 
-            const bar = document.getElementById("riskProgressBar");
-            const text = document.getElementById("riskProgressText");
-
-            bar.style.width = riskScore + "%";
-            bar.setAttribute("aria-valuenow", riskScore);
-
-            if (approvalStatus === "Approved") {
-                bar.classList.add("bg-success");
-                bar.classList.remove("bg-danger");
-            } else {
-                bar.classList.add("bg-danger");
-                bar.classList.remove("bg-success");
-            }
-
-            text.textContent = riskScore + "% → " +
-                (approvalStatus === "Approved" ? "Loan Approved ✅" : "Loan Rejected ❌");
-
-
-
-            /* -------------------------
-                 PREDICTION HISTORY TABLE
-            -------------------------- */
-
-            if (historyData && historyData.length > 0) {
-
-                document.getElementById("historySection").style.display = "block";
-
-                const tableBody = document.getElementById("historyTableBody");
-                tableBody.innerHTML = "";
-
-                historyData.forEach(item => {
-                    const row = document.createElement("tr");
-
-                    row.innerHTML =
-                        "<td>" + item.customer + "</td>" +
-                        "<td>" + item.risk + "%</td>" +
-                        "<td>" + (item.status === "Approved"
-                            ? "<span class='badge bg-success'>Approved</span>"
-                            : "<span class='badge bg-danger'>Denied</span>") +
-                        "</td>";
-
-                    tableBody.appendChild(row);
-                });
-            }
-
-
-            /* -------------------------
-                 PIE CHART
-            -------------------------- */
-
-            if (chartData) {
-                document.getElementById("chartSection").style.display = "block";
-
-                const ctx = document.getElementById("approvalChart").getContext("2d");
-
-                new Chart(ctx, {
-                    type: "pie",
-                    data: {
-                        labels: ["Approved", "Denied"],
-                        datasets: [{
-                            data: [chartData.approved, chartData.denied],
-                            backgroundColor: ["#28a745", "#dc3545"]
-                        }]
-                    }
-                });
+    // Graph
+    const ctx = document.getElementById('riskChart');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Risk Score'],
+            datasets: [{
+                label: 'Risk %',
+                data: [data.risk_score],
+                backgroundColor:
+                    data.risk_score < 40 ? 'green' :
+                    data.risk_score < 70 ? 'orange' : 'red'
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
             }
         }
-
-
-        // Initialize when page loads
-        window.onload = loadResultPage;
-    </script>
+    });
+});
+</script>
 
 </body>
 </html>

@@ -1,154 +1,263 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for, session
-import numpy as np
-import pandas as pd
-import pickle
-import json
-import os
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+import sqlite3
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key_here"   # CHANGE THIS TO ANY RANDOM STRING
+app.secret_key = "loan_secret_key"
+DB_FILE = "loan.db"
 
-# --------------------------
-# AUTHENTICATION SETUP
-# --------------------------
+# ---------------- Database Setup ----------------
+conn = sqlite3.connect(DB_FILE)
+c = conn.cursor()
+c.execute('''
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE,
+    password TEXT
+)
+''')
+c.execute('''
+CREATE TABLE IF NOT EXISTS history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    email TEXT,
+    age INTEGER,
+    loan_type TEXT,
+    income REAL,
+    loan_amount REAL,
+    employment TEXT,
+    risk_score INTEGER,
+    status TEXT
+)
+''')
+conn.commit()
+conn.close()
 
-USERS_FILE = 'users.json'
-
-# Ensure the users.json file exists
-if not os.path.exists(USERS_FILE):
-    with open(USERS_FILE, 'w') as f:
-        json.dump({"admin": "admin123", "testuser": "testuser123"}, f, indent=4)
-
-def is_logged_in():
-    return "username" in session
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
+# ---------------- Signup ----------------
+@app.route("/signup", methods=["GET","POST"])
+def signup():
     if request.method == "POST":
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form["username"].strip()
+        password = request.form["password"].strip()
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        c.execute("INSERT OR IGNORE INTO users (username,password) VALUES (?,?)",
+                  (username,password))
+        conn.commit()
+        conn.close()
+        return redirect(url_for("login"))
+    return render_template("signup.html")
 
-        # Load fresh users every time
-        with open(USERS_FILE, 'r') as f:
-            USERS = json.load(f)
+# ---------------- Login ----------------
+@app.route("/login", methods=["GET","POST"])
+def login():
+    if "user" in session:
+        return redirect(url_for("index"))
 
-        # Validate credentials
-        if username in USERS and USERS[username] == password:
-            session['username'] = username
-            return redirect(url_for('index'))
+    message = None
+    if request.method == "POST":
+        username = request.form["username"].strip()
+        password = request.form["password"].strip()
+
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE username=? AND password=?",
+                  (username, password))
+        user = c.fetchone()
+        conn.close()
+
+        if user:
+            session["user"] = username
+            return redirect(url_for("index"))
         else:
-            return render_template('login.html', error="Invalid username or password")
+            message = "Invalid username or password!"
+    return render_template("login.html", message=message)
 
-    return render_template('login.html')
-
-@app.route('/logout')
+# ---------------- Logout ----------------
+@app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
 
-# --------------------------
-# EXISTING ORIGINAL CODE
-# --------------------------
+# ---------------- Forgot Password ----------------
+@app.route("/forgot", methods=["GET","POST"])
+def forgot():
+    if request.method == "POST":
+        username = request.form["username"].strip()
+        session["reset_user"] = username
+        return redirect(url_for("reset_password"))
+    return render_template("forgot.html")
 
-# Load models and scaler
-with open('models/reg_model.pkl', 'rb') as f:
-    reg_model = pickle.load(f)
+# ---------------- Reset Password ----------------
+@app.route("/reset", methods=["GET","POST"])
+def reset_password():
+    if "reset_user" not in session:
+        return redirect(url_for("forgot"))
 
-with open('models/scaler.pkl', 'rb') as f:
-    scaler = pickle.load(f)
+    if request.method == "POST":
+        new_pass = request.form["new_password"].strip()
+        username = session["reset_user"]
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        c.execute("UPDATE users SET password=? WHERE username=?",
+                  (new_pass, username))
+        conn.commit()
+        conn.close()
+        session.pop("reset_user")
+        return redirect(url_for("login"))
 
-with open('models/clf_model.pkl', 'rb') as f:
-    clf_model = pickle.load(f)
+    return render_template("reset.html", username=session["reset_user"])
 
-# Mappings
-status_map = {'Unemployed': 0, 'Self-Employed': 1, 'Employed': 2}
-edu_map = {'High School': 0, 'Associate': 1, 'Bachelor': 2, 'Master': 3, 'Doctorate': 4}
+# ---------------- Home redirect ----------------
+@app.route("/")
+def home_redirect():
+    if "user" not in session:
+        return redirect(url_for("login"))
+    return redirect(url_for("index"))
 
-features_to_log1p = ['LoanAmount', 'MonthlyIncome', 'NetWorth']
-num_cols_to_standardize = [
-    'Age', 'CreditScore', 'LoanAmount', 'LoanDuration',
-    'CreditCardUtilizationRate', 'LengthOfCreditHistory',
-    'MonthlyIncome', 'NetWorth', 'InterestRate'
-]
-
-# In-memory prediction history
-prediction_history = []
-
-# Protect dashboard
-@app.route('/')
+# ---------------- Dashboard ----------------
+@app.route("/index", methods=["GET","POST"])
 def index():
-    if not is_logged_in():
-        return redirect(url_for('login'))
-    return render_template('index.html')
+    if "user" not in session:
+        return redirect(url_for("login"))
 
-# Prediction endpoint
-@app.route('/predict', methods=['POST'])
-def predict():
-    if not is_logged_in():
-        return jsonify({"error": "Unauthorized"}), 401
+    if request.method == "POST":
+        session["loan_data"] = {
+            "name": request.form["name"],
+            "age": request.form["age"],
+            "email": request.form["email"],
+            "loan_type": request.form["loan_type"],
+            "income": request.form["income"],
+            "loan_amount": request.form["loan_amount"],
+            "employment": request.form["employment"]
+        }
+        return redirect(url_for("verify"))
 
-    data = request.json
+    return render_template("index.html", user=session["user"])
 
-    # Convert input to DataFrame
-    input_df = pd.DataFrame([data])
+# ---------------- Verify ----------------
+@app.route("/verify", methods=["GET","POST"])
+def verify():
+    if "loan_data" not in session:
+        return redirect(url_for("index"))
 
-    # Encode categorical features
-    input_df['EmploymentStatus'] = input_df['EmploymentStatus'].map(status_map)
-    input_df['EducationLevel'] = input_df['EducationLevel'].map(edu_map)
+    if request.method == "POST":
+        session["verification"] = {
+            "aadhaar": "Verified",
+            "pan": "Verified",
+            "loan_history": "No previous loans"
+        }
+        return redirect(url_for("result"))
 
-    # Log1p transform
-    input_df[features_to_log1p] = input_df[features_to_log1p].apply(np.log1p)
+    return render_template("verify.html", user=session["user"])
 
-    # Standardize numerical columns
-    input_df[num_cols_to_standardize] = scaler.transform(input_df[num_cols_to_standardize])
+# ---------------- Result Page ----------------
+@app.route("/result")
+def result():
+    if "verification" not in session or "loan_data" not in session:
+        return redirect(url_for("index"))
 
-    # Predict risk score
-    risk_score = round(reg_model.predict(input_df)[0], 2)
-    approval_status = clf_model.predict([[risk_score]])[0]
-    approval_text = "Approved" if approval_status == 1 else "Rejected"
+    loan = session["loan_data"]
+    verification = session["verification"]
 
-    # Save to history
-    prediction_history.append({
-        'RiskScore': risk_score,
-        'ApprovalStatus': approval_text
-    })
+    income = int(loan["income"])
+    loan_amount = int(loan["loan_amount"])
+    employment = loan["employment"]
+    history = verification["loan_history"]
 
-    # Prepare pie chart data
-    df_hist = pd.DataFrame(prediction_history)
-    pie_data = df_hist['ApprovalStatus'].value_counts().to_dict()
+    risk_score = 0
 
-    # Return JSON
+    # Loan vs income
+    if loan_amount > income * 5:
+        risk_score += 40
+    elif loan_amount > income * 3:
+        risk_score += 25
+    else:
+        risk_score += 10
+
+    # ✅ UPDATED EMPLOYMENT LOGIC
+    if employment == "Unemployed":
+        risk_score += 35
+    elif employment == "Self Employed":
+        risk_score += 20
+    else:
+        risk_score += 10
+
+    # Loan history
+    if history == "Previous loan found":
+        risk_score += 15
+    else:
+        risk_score += 5
+
+    risk_score = min(risk_score, 100)
+
+    # Thresholds
+    if risk_score < 35:
+        status = "Low Risk"
+    elif risk_score < 60:
+        status = "Medium Risk"
+    else:
+        status = "High Risk"
+
+    return render_template(
+        "result.html",
+        risk_score=risk_score,
+        status=status,
+        verification=verification,
+        loan=loan
+    )
+
+# ---------------- Result Data API ----------------
+@app.route("/result_data")
+def result_data():
+    if "verification" not in session or "loan_data" not in session:
+        return jsonify({"error": "No data available"}), 400
+
+    loan = session["loan_data"]
+    verification = session["verification"]
+
+    income = int(loan["income"])
+    loan_amount = int(loan["loan_amount"])
+    employment = loan["employment"]
+    history = verification["loan_history"]
+
+    risk_score = 0
+
+    if loan_amount > income * 5:
+        risk_score += 40
+    elif loan_amount > income * 3:
+        risk_score += 25
+    else:
+        risk_score += 10
+
+    # ✅ SAME EMPLOYMENT LOGIC
+    if employment == "Unemployed":
+        risk_score += 35
+    elif employment == "Self Employed":
+        risk_score += 20
+    else:
+        risk_score += 10
+
+    if history == "Previous loan found":
+        risk_score += 15
+    else:
+        risk_score += 5
+
+    risk_score = min(risk_score, 100)
+
+    if risk_score < 35:
+        status = "Low Risk"
+    elif risk_score < 60:
+        status = "Medium Risk"
+    else:
+        status = "High Risk"
+
     return jsonify({
-        'risk_score': risk_score,
-        'approval_status': approval_text,
-        'history': prediction_history,
-        'pie_data': pie_data
+        "loan_data": loan,
+        "verification": verification,
+        "risk_score": risk_score,
+        "status": status
     })
 
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-
-        # Load existing users every time
-        with open(USERS_FILE, 'r') as f:
-            users = json.load(f)
-
-        # Check if user already exists
-        if username in users:
-            return "User already exists! Try a different username."
-
-        # Add new user
-        users[username] = password
-
-        # Save back to file
-        with open(USERS_FILE, 'w') as f:
-            json.dump(users, f, indent=4)
-
-        return "Signup successful! Now go to Login page."
-
-    return render_template('signup.html')
-
-if __name__ == '__main__':
+# ---------------- Run App ----------------
+if __name__ == "__main__":
     app.run(debug=True)

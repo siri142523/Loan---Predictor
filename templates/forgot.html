@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="card">
+    <h2>Forgot Password</h2>
+
+    <!-- Error message -->
+    {% if error %}
+    <p style="color: #ff7675; font-weight: bold;">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST">
+        <input type="text" name="username" placeholder="Enter your username" required>
+        <button type="submit">Submit</button>
+    </form>
+
+    <p style="margin-top:10px;"><a href="/login">Back to Login</a></p>
+</div>
+
+</body>
+</html>
+

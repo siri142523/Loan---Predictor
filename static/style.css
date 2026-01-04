@@ -1,78 +1,111 @@
-html, body {
+/* ---------------- Body ---------------- */
+body {
     margin: 0;
     padding: 0;
-    height: 100%;
-    background-size: cover;
-    font-family: 'Arial', sans-serif;
-}
-
-.container {
-    background-color: rgba(255, 255, 255, 0);
-    max-width: 1100px;
-    margin: 40px auto;
-    padding: 0px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-h1 {
-    text-align: center;
-    color: #3f51b5;
-    margin-bottom: 30px;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-}
-
-.form-group {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: url("bg.jpg") no-repeat center center/cover;
+    height: 100vh;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
-label {
-    font-weight: bold;
-    margin-bottom: 6px;
+/* ---------------- Card Container ---------------- */
+.card {
+    width: 400px;
+    max-width: 95%;
+    padding: 35px 40px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 15px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 25px rgba(0,0,0,0.4);
+    color: white;
+    text-align: center;
+    position: relative;
+}
+body.logged-in {
+    background: url('dashboard-bg.jpg') no-repeat center center;
+    background-size: cover;
+    min-height: 100vh;
 }
 
+/* ---------------- Inputs & Selects ---------------- */
 input, select {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 14px;
+    width: 100%;
+    padding: 12px;
+    margin-top: 12px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
 }
 
 input:focus, select:focus {
-    border-color: #3f51b5;
     outline: none;
+    box-shadow: 0 0 5px #0984e3;
 }
 
-.submit-container {
-    text-align: center;
-    margin-top: 30px;
-}
-
-input[type="submit"] {
-    background-color: #3f51b5;
+/* ---------------- Buttons ---------------- */
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 20px;
+    background: #0984e3;
     color: white;
-    padding: 12px 25px;
+    border-radius: 8px;
     border: none;
-    border-radius: 6px;
-    cursor: pointer;
     font-size: 16px;
+    cursor: pointer;
     transition: 0.3s;
 }
 
-input[type="submit"]:hover {
-    background-color: #303f9f;
+button:hover {
+    background: #0652dd;
 }
 
-.result {
-    text-align: center;
-    margin-top: 30px;
-    font-size: 18px;
-    color: #d32f2f;
+/* ---------------- Links ---------------- */
+a {
+    color: #00cec9;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.forgot-pass {
+    display: block;
+    margin-top: 12px;
+    text-align: right;
+    font-size: 14px;
+}
+
+/* ---------------- Logout Button Top-Right ---------------- */
+.logout-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: white;
     font-weight: bold;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    background: rgba(0,0,0,0.3);
+    transition: 0.3s;
+}
+
+.logout-btn:hover {
+    background: rgba(0,0,0,0.6);
+}
+
+/* ---------------- Headings ---------------- */
+h2 {
+    margin-bottom: 20px;
+    font-size: 28px;
+}
+
+/* ---------------- Paragraphs ---------------- */
+p {
+    font-size: 16px;
+    margin: 5px 0;
 }

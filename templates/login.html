@@ -4,68 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Arial;
-
-            background: url("{{ url_for('static', filename='bg.jpg') }}") 
-                        no-repeat center center/cover;
-
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .glass-card {
-            width: 350px;
-            padding: 35px 40px;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 20px rgba(0,0,0,0.4);
-            color: white;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-top: 12px;
-            background: rgba(255,255,255,0.8);
-            border: none;
-            border-radius: 8px;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 20px;
-            background: #00b894;
-            color: white;
-            border-radius: 8px;
-            border: none;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+<body style="
+    background: url('/static/bg.jpg') no-repeat center center fixed;
+    background-size: cover;
+">
 
-<body>
-    <div class="glass-card">
-        <h2>Login</h2>
+<div class="card">
+    <h2>Login</h2>
 
-        {% if error %}
-        <p style="color: red; text-align: center">{{ error }}</p>
-        {% endif %}
+    <!-- Message for invalid login -->
+    {% if message %}
+    <p style="color: #ff7675; font-weight:bold;">{{ message }}</p>
+    {% endif %}
 
-        <form method="POST">
-            <input type="text" name="username" placeholder="Enter Username" required>
-            <input type="password" name="password" placeholder="Enter Password" required>
-            <button type="submit">Login</button>
-        </form>
+    <form method="POST" onsubmit="saveUser()"> <!-- ADDED -->
+        <input type="text" id="username" name="username" placeholder="Username" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+    </form>
 
-        <p style="text-align:center;margin-top:10px;">New user? <a href="/signup">Signup</a></p>
-    </div>
+    <a href="/forgot" class="forgot-pass">Forgot Password?</a>
+    <p style="margin-top:10px;">Don't have an account? <a href="/signup">Signup</a></p>
+</div>
+
+<!-- ADDED SCRIPT -->
+<script>
+function saveUser() {
+    const username = document.getElementById("username").value;
+
+    // store for dashboard profile
+    localStorage.setItem("userName", username);
+    localStorage.setItem("userEmail", username + "@mail.com");
+}
+</script>
+
 </body>
 </html>
