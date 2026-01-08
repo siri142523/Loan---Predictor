@@ -2,6 +2,7 @@ import pytesseract
 from PIL import Image
 import re
 import os
+import io
 from pdf2image import convert_from_bytes
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import sqlite3
@@ -35,6 +36,27 @@ def is_valid_pan(file):
         return True
     except:
         return False
+
+def validate_fee_doc(file, user_name, user_email):
+    if not file or file.filename == "":
+        return False, "Fee structure document not uploaded"
+
+    allowed = [".pdf", ".png", ".jpg", ".jpeg"]
+    if not any(file.filename.lower().endswith(ext) for ext in allowed):
+        return False, "Invalid fee document format"
+
+    file.seek(0, 2)
+    size = file.tell()
+    file.seek(0)
+
+    if size < 10 * 1024:
+        return False, "Fee document appears empty"
+
+    if size > 3 * 1024 * 1024:
+        return False, "Fee document exceeds 3 MB"
+
+    # ✅ TEMPORARY ACCEPT (for project submission)
+    return True, None
 
 # ---------------- Database Setup ----------------
 conn = sqlite3.connect(DB_FILE)
@@ -152,15 +174,43 @@ def index():
         return redirect(url_for("login"))
 
     if request.method == "POST":
+
+        name = request.form["name"]
+        age = request.form["age"]
+        email = request.form["email"]
+        loan_type = request.form["loan_type"]
+        income = request.form["income"]
+        loan_amount = request.form["loan_amount"]
+        employment = request.form["employment"]
+
+        # ---------- EDUCATION LOAN FEE VALIDATION ----------
+        if loan_type == "Education Loan":
+            fee_doc = request.files.get("fee_doc")
+
+            ok, msg = validate_fee_doc(
+                fee_doc,
+                name,
+                email
+            )
+
+            if not ok:
+                return render_template(
+                    "index.html",
+                    user=session["user"],
+                    error=msg
+                )
+
+        # ---------- SAVE DATA ONLY IF EVERYTHING IS VALID ----------
         session["loan_data"] = {
-            "name": request.form["name"],
-            "age": request.form["age"],
-            "email": request.form["email"],
-            "loan_type": request.form["loan_type"],
-            "income": request.form["income"],
-            "loan_amount": request.form["loan_amount"],
-            "employment": request.form["employment"]
+            "name": name,
+            "age": age,
+            "email": email,
+            "loan_type": loan_type,
+            "income": income,
+            "loan_amount": loan_amount,
+            "employment": employment
         }
+
         return redirect(url_for("verify"))
 
     return render_template("index.html", user=session["user"])
@@ -172,6 +222,10 @@ def verify():
         return redirect(url_for("index"))
 
     error = None
+
+    # 🔹 SHOW VERIFY PAGE FIRST
+    if request.method == "GET":
+        return render_template("verify.html")
 
     if request.method == "POST":
         aadhaar = request.files.get("aadhaar")
@@ -203,50 +257,43 @@ def verify():
 
             return True, None
 
-        # ---------------- Aadhaar Validation (UNCHANGED) ----------------
+        # ---------------- Aadhaar Validation ----------------
         ok, msg = validate_file(
             aadhaar,
             ["aadhaar", "uidai", "government of india"]
         )
         if not ok:
-            error = "Invalid Aadhaar document"
-            return render_template("verify.html", error=error)
+            return render_template("verify.html", error="Invalid Aadhaar document")
 
-        # ---------------- PAN OCR VALIDATION (UPDATED) ----------------
+        # ---------------- PAN Validation ----------------
         if not pan or pan.filename == "":
-            error = "PAN file not selected"
-            return render_template("verify.html", error=error)
+            return render_template("verify.html", error="PAN file not selected")
 
         if not pan.filename.lower().endswith((".pdf", ".png", ".jpg", ".jpeg")):
-            error = "Invalid PAN file format"
-            return render_template("verify.html", error=error)
+            return render_template("verify.html", error="Invalid PAN file format")
 
         pan.seek(0, 2)
         size = pan.tell()
         pan.seek(0)
 
         if size < 5 * 1024:
-            error = "PAN file appears to be empty"
-            return render_template("verify.html", error=error)
+            return render_template("verify.html", error="PAN file appears empty")
 
         if size > 2 * 1024 * 1024:
-            error = "PAN file size exceeds 2 MB"
-            return render_template("verify.html", error=error)
+            return render_template("verify.html", error="PAN file size exceeds 2 MB")
 
-        # 🔥 REAL PAN OCR CHECK
         if not is_valid_pan(pan):
-            error = "Uploaded document is not a valid PAN card"
-            return render_template("verify.html", error=error)
+            return render_template("verify.html", error="Uploaded document is not a valid PAN card")
 
-        # ---------------- Success ----------------
+        # ---------------- SUCCESS (ONLY HERE REDIRECT) ----------------
         session["verification"] = {
             "aadhaar": "Verified",
             "pan": "Verified",
             "loan_history": "No previous loans"
         }
+
         return redirect(url_for("result"))
 
-    return render_template("verify.html", error=error)
 
 # ---------------- Result Page ----------------
 @app.route("/result")

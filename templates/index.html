@@ -61,7 +61,7 @@
 
 <p style="text-align:center;">Welcome</p>
 
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
 
     <div style="
         background: rgba(0,0,0,0.6);
@@ -79,12 +79,27 @@
     </div><br>
 
     <label>Loan Type</label>
-    <select name="loan_type" required>
+    <select name="loan_type" id="loan_type" required onchange="toggleFeeDoc()">
         <option>Home Loan</option>
         <option>Education Loan</option>
         <option>Personal Loan</option>
         <option>Vehicle Loan</option>
     </select><br><br>
+
+<!-- Hidden Fee Structure Upload -->
+<div id="feeUpload" style="display:none; margin-top:15px;">
+    <label>Upload Fee Structure (Education Loan)</label><br>
+    <input type="file" name="fee_doc" accept=".pdf,.jpg,.png">
+    <small style="color:#ccc;">
+        Upload college fee receipt or fee structure document (PDF/Image)
+    </small>
+</div>
+
+{% if error %}
+<p style="color:#ff6b6b; font-weight:bold;">
+    {{ error }}
+</p>
+{% endif %}
 
     <label>Annual Income</label>
     <input type="number" name="income" placeholder="Enter Annual Income" required><br><br>
@@ -94,11 +109,11 @@
 
     <label>Employment Type</label>
     <select name="employment" required>
-    <option value="">Select Employment Type</option>
-    <option>Salaried</option>
-    <option>Self Employed</option>
-    <option>Unemployed</option>
-</select><br><br>
+        <option value="">Select Employment Type</option>
+        <option>Salaried</option>
+        <option>Self Employed</option>
+        <option>Unemployed</option>
+    </select><br><br>
 
     <button type="submit">Next</button>
 
@@ -106,14 +121,12 @@
 </form>
 </div>
 
-<!-- PROFILE SCRIPT -->
 <script>
 function toggleProfile() {
     const menu = document.getElementById("profileMenu");
     menu.style.display = (menu.style.display === "block") ? "none" : "block";
 }
 
-// Load profile dynamically
 document.getElementById("pname").innerText =
     localStorage.getItem("userName") || "User";
 
@@ -125,6 +138,21 @@ document.getElementById("dname").innerText =
 
 document.getElementById("demail").innerText =
     localStorage.getItem("userEmail") || "user@email.com";
+</script>
+
+<script>
+function toggleFeeDoc() {
+    const loanType = document.getElementById("loan_type").value;
+    const feeSection = document.getElementById("feeUpload");
+
+    if (loanType === "Education Loan") {
+        feeSection.style.display = "block";
+        feeSection.querySelector("input").required = true;
+    } else {
+        feeSection.style.display = "none";
+        feeSection.querySelector("input").required = false;
+    }
+}
 </script>
 
 </body>
