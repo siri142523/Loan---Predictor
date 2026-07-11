@@ -1,3 +1,31 @@
 instance/
 __pycache__/
+<<<<<<< HEAD
 *.pyc
+=======
+*.py[cod]
+*.so
+
+# Virtual environments
+venv/
+env/
+*.egg-info/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment variables or credentials
+.env
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+>>>>>>> 7429fc265425c0ff9e01b4af44cce9eb7e2aaf0a

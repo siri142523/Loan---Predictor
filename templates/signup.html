@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signup</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="card">
+    <h2>Create Account</h2>
+    <form method="POST">
+        <input type="text" name="username" placeholder="Choose Username" required>
+        <input type="email" id="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Choose Password" required>
+        <button type="submit">Signup</button>
+    </form>
+    <p>Already have an account? <a href="/login">Login</a></p>
+</div>
+
+<script>
+function saveUser() {
+    const username = document.getElementById("username").value;
+    const email = document.getElementById("email").value;
+
+    localStorage.setItem("userName", username);
+    localStorage.setItem("userEmail", email);
+}
+</script>
+</body>
+</html>

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+<<<<<<< HEAD
     <title>Login - Loan Predictor</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -34,5 +35,45 @@
     </p>
 </div>
 
+=======
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body style="
+    background: url('/static/bg.jpg') no-repeat center center fixed;
+    background-size: cover;
+">
+
+<div class="card">
+    <h2>Login</h2>
+
+    <!-- Message for invalid login -->
+    {% if message %}
+    <p style="color: #ff7675; font-weight:bold;">{{ message }}</p>
+    {% endif %}
+
+    <form method="POST" onsubmit="saveUser()"> <!-- ADDED -->
+        <input type="text" id="username" name="username" placeholder="Username" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+    </form>
+
+    <a href="/forgot" class="forgot-pass">Forgot Password?</a>
+    <p style="margin-top:10px;">Don't have an account? <a href="/signup">Signup</a></p>
+</div>
+
+<!-- ADDED SCRIPT -->
+<script>
+function saveUser() {
+    const username = document.getElementById("username").value;
+
+    // store for dashboard profile
+    localStorage.setItem("userName", username);
+    localStorage.setItem("userEmail", username + "@mail.com");
+}
+</script>
+
+>>>>>>> 7429fc265425c0ff9e01b4af44cce9eb7e2aaf0a
 </body>
 </html>

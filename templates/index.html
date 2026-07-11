@@ -1,117 +1,159 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Loan Prediction App</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loan Dashboard</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-    <div class="container">
-        <h1>Loan Approval Predictor</h1>
-        <form action="/" method="POST">
-            <div class="form-grid">
 
-                <div class="form-group">
-                    <label>Name:</label>
-                    <input type="text" name="UserName" placeholder="Enter your name">
-                </div>
-                <div class="form-group">
-                    <label>Email:</label>
-                    <input type="email" name="UserEmail" placeholder="example@email.com">
-                </div>
-                <div class="form-group">
-                    <label>Age:</label>
-                    <input type="number" name="Age" required>
-                </div>
-                <div class="form-group">
-                    <label>Credit Score:</label>
-                    <input type="number" name="CreditScore" required>
-                </div>
-                <div class="form-group">
-                    <label>Employment Status:</label>
-                    <select name="EmploymentStatus" required>
-                        <option>Unemployed</option>
-                        <option>Self-Employed</option>
-                        <option>Employed</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Education Level:</label>
-                    <select name="EducationLevel" required>
-                        <option>High School</option>
-                        <option>Associate</option>
-                        <option>Bachelor</option>
-                        <option>Master</option>
-                        <option>Doctorate</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Loan Amount:</label>
-                    <input type="number" step="0.01" name="LoanAmount" required>
-                </div>
-                <div class="form-group">
-                    <label>Loan Duration (months):</label>
-                    <input type="number" name="LoanDuration" required>
-                </div>
-                <div class="form-group">
-                    <label>Interest Rate (%):</label>
-                    <input type="number" step="0.01" name="InterestRate" required>
-                </div>
-                <div class="form-group">
-                    <label>Credit Card Utilization Rate:</label>
-                    <input type="number" step="0.01" name="CreditCardUtilizationRate" required>
-                </div>
-                <div class="form-group">
-                    <label>Bankruptcy History:</label>
-                    <select name="BankruptcyHistory" required>
-                        <option value="0">No</option>
-                        <option value="1">Yes</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Previous Loan Defaults:</label>
-                    <select name="PreviousLoanDefaults" required>
-                        <option value="0">No</option>
-                        <option value="1">Yes</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Length of Credit History (years):</label>
-                    <input type="number" name="LengthOfCreditHistory" required>
-                </div>
-                <div class="form-group">
-                    <label>Monthly Income:</label>
-                    <input type="number" step="0.01" name="MonthlyIncome" required>
-                </div>
-                <div class="form-group">
-                    <label>Net Worth:</label>
-                    <input type="number" step="0.01" name="NetWorth" required>
-                </div>
+<body style="background: url('/static/dashboard_bg.jpg') no-repeat center center fixed; background-size: cover;">
 
-            </div>
+<!-- PROFILE SECTION -->
+<div style="position:absolute; top:20px; left:20px;">
 
-            <div class="submit-container">
-                <input type="submit" value="Predict">
-            </div>
-        </form>
-
-        <!-- Result / Progress Bar -->
-        {% if risk_score is defined %}
-        <div class="result mt-3">
-            <label><strong>Loan Risk Score:</strong></label>
-            <div class="progress" style="height: 30px;">
-                <div class="progress-bar {% if color == 'red' %}bg-danger{% else %}bg-success{% endif %}" 
-                     role="progressbar" 
-                     style="width: {{ risk_score }}%; min-width: 2%;" 
-                     aria-valuenow="{{ risk_score }}" 
-                     aria-valuemin="0" 
-                     aria-valuemax="100">
-                    {{ risk_score }}% → {% if color == 'green' %}Loan Approved ✅{% else %}Loan Rejected ❌{% endif %}
-                </div>
-            </div>
+    <div onclick="toggleProfile()" 
+         style="display:flex;align-items:center;cursor:pointer;">
+        <img src="/static/profile.png"
+             style="width:45px;height:45px;border-radius:50%;margin-right:10px;">
+        <div style="color:white;">
+            <div id="pname" style="font-weight:bold;">User</div>
+            <div id="pemail" style="font-size:13px;">email</div>
         </div>
-        {% endif %}
     </div>
+
+    <!-- DROPDOWN -->
+    <div id="profileMenu"
+         style="
+            display:none;
+            margin-top:10px;
+            background:rgba(0,0,0,0.8);
+            padding:12px;
+            border-radius:10px;
+            color:white;
+            width:200px;
+         ">
+        <p id="dname"></p>
+        <p id="demail" style="font-size:13px;"></p>
+        <hr style="border:0.5px solid gray;">
+        <a href="{{ url_for('logout') }}"
+           style="color:#ff7675;text-decoration:none;"
+           onclick="localStorage.clear()">
+           Logout
+        </a>
+    </div>
+
+</div>
+
+<div class="card">
+<div style="
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:12px;
+    margin-top:20px;
+    margin-bottom:20px;
+">
+    <img src="/static/loan-logo.png"
+         style="width:40px;height:40px;">
+    <h2 style="margin:0;">Loan Prediction Dashboard</h2>
+</div>
+
+<p style="text-align:center;">Welcome</p>
+
+<form method="POST" enctype="multipart/form-data">
+
+    <div style="
+        background: rgba(0,0,0,0.6);
+        padding: 30px;
+        border-radius: 15px;
+        width: 70%;
+        margin: 40px auto;
+        color: white;
+    ">
+
+    <div class="form-row">
+        <input type="text" name="name" placeholder="Name" required>
+        <input type="number" name="age" placeholder="Age" required>
+        <input type="email" name="email" placeholder="Email" required>
+    </div><br>
+
+    <label>Loan Type</label>
+    <select name="loan_type" id="loan_type" required onchange="toggleFeeDoc()">
+        <option>Home Loan</option>
+        <option>Education Loan</option>
+        <option>Personal Loan</option>
+        <option>Vehicle Loan</option>
+    </select><br><br>
+
+<!-- Hidden Fee Structure Upload -->
+<div id="feeUpload" style="display:none; margin-top:15px;">
+    <label>Upload Fee Structure (Education Loan)</label><br>
+    <input type="file" name="fee_doc" accept=".pdf,.jpg,.png">
+    <small style="color:#ccc;">
+        Upload college fee receipt or fee structure document (PDF/Image)
+    </small>
+</div>
+
+{% if error %}
+<p style="color:#ff6b6b; font-weight:bold;">
+    {{ error }}
+</p>
+{% endif %}
+
+    <label>Annual Income</label>
+    <input type="number" name="income" placeholder="Enter Annual Income" required><br><br>
+
+    <label>Loan Amount</label>
+    <input type="number" name="loan_amount" placeholder="Enter Loan Amount" required><br><br>
+
+    <label>Employment Type</label>
+    <select name="employment" required>
+        <option value="">Select Employment Type</option>
+        <option>Salaried</option>
+        <option>Self Employed</option>
+        <option>Unemployed</option>
+    </select><br><br>
+
+    <button type="submit">Next</button>
+
+    </div>
+</form>
+</div>
+
+<script>
+function toggleProfile() {
+    const menu = document.getElementById("profileMenu");
+    menu.style.display = (menu.style.display === "block") ? "none" : "block";
+}
+
+document.getElementById("pname").innerText =
+    localStorage.getItem("userName") || "User";
+
+document.getElementById("pemail").innerText =
+    localStorage.getItem("userEmail") || "user@email.com";
+
+document.getElementById("dname").innerText =
+    localStorage.getItem("userName") || "User";
+
+document.getElementById("demail").innerText =
+    localStorage.getItem("userEmail") || "user@email.com";
+</script>
+
+<script>
+function toggleFeeDoc() {
+    const loanType = document.getElementById("loan_type").value;
+    const feeSection = document.getElementById("feeUpload");
+
+    if (loanType === "Education Loan") {
+        feeSection.style.display = "block";
+        feeSection.querySelector("input").required = true;
+    } else {
+        feeSection.style.display = "none";
+        feeSection.querySelector("input").required = false;
+    }
+}
+</script>
+
 </body>
 </html>
