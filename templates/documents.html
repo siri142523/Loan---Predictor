@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Document Verification</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h3>Aadhar & PAN Verification</h3>
+
+    <form action="/verify" method="POST" enctype="multipart/form-data">
+
+        <div class="mb-3">
+            <label>Aadhar Card</label>
+            <input type="file" class="form-control" name="aadhar" required>
+        </div>
+
+        <div class="mb-3">
+            <label>PAN Card</label>
+            <input type="file" class="form-control" name="pan" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Verify</button>
+    </form>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prediction History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Prediction History</h2>
+        <table>
+            <tr>
+                <th>Date & Time</th>
+                <th>Risk Score</th>
+                <th>Status</th>
+            </tr>
+            {% for item in history %}
+            <tr>
+                <td>{{ item.date_time }}</td>
+                <td>{{ item.risk_score }}%</td>
+                <td>{{ 'Approved ✅' if item.approved else 'Rejected ❌' }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <a href="{{ url_for('index') }}">Back to Prediction</a>
+    </div>
+</body>
+</html>

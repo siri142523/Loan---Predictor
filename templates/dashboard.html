@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Loan Application Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-4">
+
+    <!-- Title -->
+    <div class="text-center mb-4">
+        <h2>🏦 Loan Application Dashboard</h2>
+        <p>Apply for your loan</p>
+    </div>
+
+    <!-- Loan Details Form -->
+    <form action="/documents" method="POST">
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Age</label>
+                <input type="number" class="form-control" name="Age" required>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label>CIBIL Score</label>
+                <input type="number" class="form-control" name="CIBILScore" required>
+            </div>
+        </div>
+
+        <!-- Loan Type (NEW) -->
+        <div class="mb-3">
+            <label>Loan Type</label>
+            <select class="form-control" name="LoanType" required>
+                <option value="">-- Select Loan Type --</option>
+                <option>Home Loan</option>
+                <option>Personal Loan</option>
+                <option>Education Loan</option>
+                <option>Vehicle Loan</option>
+                <option>Business Loan</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label>Employment Status</label>
+            <select class="form-control" name="EmploymentStatus" required>
+                <option>Employed</option>
+                <option>Self-Employed</option>
+                <option>Unemployed</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label>Education Level</label>
+            <select class="form-control" name="EducationLevel" required>
+                <option>Bachelor</option>
+                <option>Master</option>
+                <option>Doctorate</option>
+                <option>Associate</option>
+                <option>High School</option>
+            </select>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Loan Amount</label>
+                <input type="number" class="form-control" name="LoanAmount" required>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label>Loan Duration (months)</label>
+                <input type="number" class="form-control" name="LoanDuration" required>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label>Monthly Income</label>
+            <input type="number" class="form-control" name="MonthlyIncome" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Length of Credit History (years)</label>
+            <input type="number" class="form-control" name="LengthOfCreditHistory" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Credit Card Utilization Rate</label>
+            <input type="number" step="0.01" class="form-control" name="CreditCardUtilizationRate" required>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Bankruptcy History</label>
+                <select class="form-control" name="BankruptcyHistory">
+                    <option>No</option>
+                    <option>Yes</option>
+                </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label>Previous Loan Defaults</label>
+                <select class="form-control" name="PreviousLoanDefaults">
+                    <option>No</option>
+                    <option>Yes</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- NEXT -->
+        <button type="submit" class="btn btn-warning w-100">
+            Next → Document Verification
+        </button>
+    </form>
+
+    <br>
+    <a href="{{ url_for('logout') }}">Logout</a>
+
+</div>
+
+</body>
+</html>

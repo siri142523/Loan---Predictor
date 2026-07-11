@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loan Prediction Result</title>
+</head>
+<body class="container mt-5">
+
+<h3>Loan Prediction Result</h3>
+
+<p><b>Risk Score:</b> {{ latest.risk_score }}</p>
+<p><b>Status:</b> {{ latest.approval_status }}</p>
+
+<h4>Previous Predictions</h4>
+<ul>
+    {% for p in predictions %}
+        <li>{{ p.risk_score }} - {{ p.approval_status }}</li>
+    {% endfor %}
+</ul>
+
+</body>
+</html>
