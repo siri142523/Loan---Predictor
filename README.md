@@ -7,14 +7,9 @@ A machine-learning-based Loan Approval System with **user authentication**,
 
 ## 📌 Overview
 
-This project leverages machine learning models trained on a synthetic dataset to:
+--A Flask-based Loan Approval Prediction System that uses Machine Learning to predict loan risk and approval status. The application includes secure user authentication, document verification (Aadhaar & PAN), OCR-based PAN validation, and a risk assessment dashboard.
 
-- Predict a **Risk Score** for loan applicants using **LGBM Regressor**
-- Predict whether a **Loan will be Approved/Rejected** using **Random Forest Classifier**
-- Display **prediction history & interactive charts** for insights
-- Provide a **secure login/signup system** for users
-
-The web interface is built using **Flask, HTML, CSS**, and includes **user authentication** for restricted access.
+--The system validates Aadhaar and PAN documents before generating loan risk predictions and approval status.
 
 ---
 
@@ -26,22 +21,73 @@ A complete authentication system is added:
 - **Signup page**
 - **Session-based login**
 - **Protected dashboard (index.html)**
-- Users stored in `users.json`
+- **Users stored securely using SQLite and SQLAlchemy**
 
 Only logged-in users can access:
 - Prediction Form  
 - Dashboard  
 - Results  
 
+## Features
+
+- User Registration and Login
+- Forgot Password and Reset Password
+- Loan Application Dashboard
+- Education Loan Fee Structure Validation
+- Aadhaar Verification
+- PAN Card Verification using Tesseract OCR
+- Loan Risk Score Prediction
+- Loan Approval/Rejection Prediction
+- User Session Management
+- Previous Prediction History
+- Responsive UI using HTML, CSS, and Bootstrap
+
+---
+
+## Tech Stack
+
+### Frontend
+- HTML
+- CSS
+- Bootstrap
+
+### Backend
+- Flask
+- Python
+
+### Database
+- SQLite
+- SQLAlchemy
+
+### Machine Learning
+- Scikit-Learn
+- Pandas
+- NumPy
+
+### OCR & Image Processing
+- Tesseract OCR
+- Pillow (PIL)
+- pdf2image
+
+---
+
 ### 🔑 Authentication Screenshots
 
-#### 🔵 Login Page  
-![Loan Approval Screenshot](https://github.com/siri142523/Loan---Predictor/raw/main/static/login.png)
-#### 🟣 Signup Page  
-![Loan Approval Screenshot](https://github.com/siri142523/Loan---Predictor/raw/main/static/signup.png)
-#### 🟢 Dashboard  
-![Loan Approval Screenshot](https://github.com/siri142523/Loan---Predictor/raw/main/static/dashboard.png)
 
+### Login Page
+![Login](static/screenshots/login.png)
+
+### Signup Page
+![Signup](static/screenshots/signup.png)
+
+### Dashboard
+![Dashboard](static/screenshots/dashboard.png)
+
+### Verification Page
+![Verification](static/screenshots/verify.png)
+
+### Result Page
+![Result](static/screenshots/result.png)
 ---
 
 ## 📁 Project Structure
@@ -49,30 +95,40 @@ Only logged-in users can access:
 ```
 Loan-Approval-Predictor/
 │
-├── models/                   # Saved ML models and scaler
+├── models/
 │   ├── clf_model.pkl
 │   ├── reg_model.pkl
 │   └── scaler.pkl
 │
-├──static/                   # Static assets (CSS, images)
+├── static/
 │   ├── style.css
-│   ├── login.png
-│   ├── signup.png
-│   ├── dashboard.png
-|
-├── templates/                # Flask HTML templates
-│   ├── index.html
-│   ├── result.html
-│   ├── login.html            
-│   ├── signup.html           
+│   ├── bg.jpg
+│   ├── dashboard_bg.jpg
+│   ├── profile.png
+│   ├── loan-logo.png
+│   └── screenshots/
+│       ├── login.png
+│       ├── signup.png
+│       ├── dashboard.png
+│       ├── verify.png
+│       └── result.png
 │
-├── app.py                    # Flask backend
-├── .gitignore
+├── templates/
+│   ├── login.html
+│   ├── register.html
+│   ├── forgot.html
+│   ├── reset.html
+│   ├── index.html
+│   ├── verify.html
+│   └── result.html
+│
+├── app.py
 ├── requirements.txt
-├── Loan.csv                  # Dataset
-├── EDA.ipynb                 # Data analysis & feature engineering
-└── model.ipynb               # Model training & selection
-
+├── Loan.csv
+├── EDA.ipynb
+├── model.ipynb
+├── .gitignore
+└── README.md
 ````
 
 ## 🔧 Data & Modeling
@@ -130,7 +186,7 @@ The Flask application provides:
 - Save prediction history in a database.
 - Add more visual analytics for loan trends.
 - Deploy on Heroku or AWS for live access.
-- Add password hashing for higher security  
+- Implement email-based OTP verification. 
 
 ---
 
@@ -139,7 +195,7 @@ The Flask application provides:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/loan-approval-predictor.git
+git clone https://github.com/siri142523/Loan---Predictor.git
 cd loan-approval-predictor
 ````
 
@@ -159,6 +215,17 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### Install Tesseract OCR
+
+Download and install Tesseract OCR.
+
+Update the path in `app.py`:
+
+```python
+pytesseract.pytesseract.tesseract_cmd = \
+r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+```
+
 ### 4. Run the App
 
 ```bash
@@ -170,3 +237,9 @@ Then open your browser and go to:
 
 ---
 
+## 👩‍💻 Author
+
+**T. Siri Chandana**
+
+- B.Tech CSE Student
+- GitHub: https://github.com/siri142523
