@@ -1,5 +1,5 @@
-<<<<<<< HEAD
-from flask import Flask, render_template, request, redirect, url_for, session
+
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import numpy as np
@@ -18,7 +18,13 @@ db = SQLAlchemy(app)
 # ------------------- Load ML Models -------------------
 with open('models/reg_model.pkl', 'rb') as f:
     reg_model = pickle.load(f)
-=======
+
+with open('models/scaler.pkl', 'rb') as f:
+    scaler = pickle.load(f)
+
+with open('models/clf_model.pkl', 'rb') as f:
+    clf_model = pickle.load(f)
+
 import pytesseract
 from PIL import Image
 import re
@@ -29,8 +35,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 import sqlite3
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-app = Flask(__name__)
-app.secret_key = "loan_secret_key"
+
 DB_FILE = "loan.db"
 
 def is_valid_pan(file):
@@ -38,7 +43,6 @@ def is_valid_pan(file):
     import re
     from PIL import Image
     import io
->>>>>>> 7429fc265425c0ff9e01b4af44cce9eb7e2aaf0a
 
     try:
         image = Image.open(io.BytesIO(file.read()))
@@ -47,7 +51,18 @@ def is_valid_pan(file):
 
         text = text.upper()
 
-<<<<<<< HEAD
+        keywords = ["INCOME TAX", "PERMANENT ACCOUNT NUMBER", "GOVT OF INDIA", "PAN"]
+        if not any(k in text for k in keywords):
+            return False
+
+        pan_pattern = r"[A-Z]{5}[0-9]{4}[A-Z]"
+        if not re.search(pan_pattern, text):
+            return False
+
+        return True
+    except Exception:
+        return False
+
 # ------------------- Mappings -------------------
 status_map = {'Unemployed': 0, 'Self-Employed': 1, 'Employed': 2}
 edu_map = {'High School': 0, 'Associate': 1, 'Bachelor': 2, 'Master': 3, 'Doctorate': 4}
@@ -62,6 +77,7 @@ num_cols_to_standardize = [
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
 
 class Prediction(db.Model):
@@ -75,41 +91,52 @@ with app.app_context():
 
 # ------------------- Routes -------------------
 
-@app.route('/')
-def home():
-    return render_template('index.html')
 
 # -------- Register --------
-@app.route('/register', methods=['GET','POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
+
     if request.method == 'POST':
+
         username = request.form['username']
+        email = request.form['email']
         password = generate_password_hash(request.form['password'])
 
         if User.query.filter_by(username=username).first():
             return "Username already exists"
 
-        db.session.add(User(username=username, password=password))
+        new_user = User(
+            username=username,
+            email=email,
+            password=password
+        )
+
+        db.session.add(new_user)
         db.session.commit()
+
         return redirect(url_for('login'))
 
     return render_template('register.html')
-
 # -------- Login --------
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
-        user = User.query.filter_by(username=request.form['username']).first()
 
-        if user and check_password_hash(user.password, request.form['password']):
+        username = request.form['username']
+        password = request.form['password']
+
+        user = User.query.filter_by(username=username).first()
+
+        if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
+            session['user'] = user.username
             session['verified'] = False
-            return redirect(url_for('dashboard'))
+
+            return redirect(url_for('index'))
 
         return "Invalid Credentials"
 
     return render_template('login.html')
-
 # -------- Forgot Password --------
 @app.route('/forgot-password')
 def forgot_password():
@@ -128,7 +155,7 @@ def reset_password():
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('home'))
+    return redirect(url_for('login'))
 
 # -------- Dashboard (Loan Details Page) --------
 @app.route('/dashboard')
@@ -145,23 +172,7 @@ def documents():
     return render_template('documents.html')
 
 # -------- Aadhar & PAN Verification --------
-@app.route('/verify', methods=['POST'])
-def verify():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
 
-    aadhar = request.files['aadhar']
-    pan = request.files['pan']
-
-    if aadhar and pan:
-        session['verified'] = True
-        return render_template(
-            'verification_result.html',
-            aadhar_status="Correct Person Verified",
-            pan_status="No previous loan history found"
-        )
-
-    return "Verification Failed"
 
 # -------- Prediction (ONLY AFTER VERIFICATION) --------
 @app.route('/predict', methods=['POST'])
@@ -203,19 +214,7 @@ def predict():
     return render_template('results.html', latest=pred, predictions=predictions)
 
 # ------------------- Run -------------------
-if __name__ == '__main__':
-=======
-        keywords = ["INCOME TAX", "PERMANENT ACCOUNT NUMBER", "GOVT OF INDIA", "PAN"]
-        if not any(k in text for k in keywords):
-            return False
 
-        pan_pattern = r"[A-Z]{5}[0-9]{4}[A-Z]"
-        if not re.search(pan_pattern, text):
-            return False
-
-        return True
-    except:
-        return False
 
 def validate_fee_doc(file, user_name, user_email):
     if not file or file.filename == "":
@@ -281,64 +280,10 @@ def signup():
     return render_template("signup.html")
 
 # ---------------- Login ----------------
-@app.route("/login", methods=["GET","POST"])
-def login():
-    if "user" in session:
-        return redirect(url_for("index"))
 
-    message = None
-    if request.method == "POST":
-        username = request.form["username"].strip()
-        password = request.form["password"].strip()
-
-        conn = sqlite3.connect(DB_FILE)
-        c = conn.cursor()
-        c.execute("SELECT * FROM users WHERE username=? AND password=?",
-                  (username, password))
-        user = c.fetchone()
-        conn.close()
-
-        if user:
-            session["user"] = username
-            return redirect(url_for("index"))
-        else:
-            message = "Invalid username or password!"
-    return render_template("login.html", message=message)
 
 # ---------------- Logout ----------------
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("login"))
 
-# ---------------- Forgot Password ----------------
-@app.route("/forgot", methods=["GET","POST"])
-def forgot():
-    if request.method == "POST":
-        username = request.form["username"].strip()
-        session["reset_user"] = username
-        return redirect(url_for("reset_password"))
-    return render_template("forgot.html")
-
-# ---------------- Reset Password ----------------
-@app.route("/reset", methods=["GET","POST"])
-def reset_password():
-    if "reset_user" not in session:
-        return redirect(url_for("forgot"))
-
-    if request.method == "POST":
-        new_pass = request.form["new_password"].strip()
-        username = session["reset_user"]
-        conn = sqlite3.connect(DB_FILE)
-        c = conn.cursor()
-        c.execute("UPDATE users SET password=? WHERE username=?",
-                  (new_pass, username))
-        conn.commit()
-        conn.close()
-        session.pop("reset_user")
-        return redirect(url_for("login"))
-
-    return render_template("reset.html", username=session["reset_user"])
 
 # ---------------- Home redirect ----------------
 @app.route("/")
@@ -438,12 +383,12 @@ def verify():
             return True, None
 
         # ---------------- Aadhaar Validation ----------------
-        ok, msg = validate_file(
-            aadhaar,
-            ["aadhaar", "uidai", "government of india"]
-        )
-        if not ok:
-            return render_template("verify.html", error="Invalid Aadhaar document")
+        # Aadhaar Validation (Temporary for Project Demo)
+        if not aadhaar or aadhaar.filename == "":
+          return render_template(
+          "verify.html",
+           error="Please upload Aadhaar"
+    )
 
         # ---------------- PAN Validation ----------------
         if not pan or pan.filename == "":
@@ -585,5 +530,4 @@ def result_data():
 
 # ---------------- Run App ----------------
 if __name__ == "__main__":
->>>>>>> 7429fc265425c0ff9e01b4af44cce9eb7e2aaf0a
     app.run(debug=True)
